@@ -3,7 +3,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from finance_suite.balance import calculate_balance
+from finance_suite.balance import calculate_balance, is_transaction_allowed
 from finance_suite.transaction import Transaction
 
 now_utc = datetime.now(ZoneInfo("UTC"))
@@ -94,3 +94,51 @@ def test_account_without_matching_transactions():
     result = calculate_balance(unknown_account_id, transactions)
 
     assert result == expected_total
+
+
+def test_transaction_is_allowed_positive_balance():
+    """Test allowed transaction with positive balance"""
+
+    t1 = Transaction(
+        test_account_id, Decimal("100.00"), "test transaction 1", transaction_date
+    )
+
+    t2 = Transaction(
+        test_account_id, Decimal("100.00"), "test transaction 1", transaction_date
+    )
+
+    transactions = [t1]
+
+    assert is_transaction_allowed(transactions, t2)
+
+
+def test_transaction_allowed_when_balance_reaches_zero():
+    """Test allowed transaction with zero balance"""
+
+    t1 = Transaction(
+        test_account_id, Decimal("100.00"), "test transaction 1", transaction_date
+    )
+
+    t2 = Transaction(
+        test_account_id, Decimal("-100.00"), "test transaction 1", transaction_date
+    )
+
+    transactions = [t1]
+
+    assert is_transaction_allowed(transactions, t2)
+
+
+def test_transaction_rejected_when_balance_would_be_negative():
+    """Test allowed transaction with negative balance"""
+
+    t1 = Transaction(
+        test_account_id, Decimal("100.00"), "test transaction 1", transaction_date
+    )
+
+    t2 = Transaction(
+        test_account_id, Decimal("-200.00"), "test transaction 1", transaction_date
+    )
+
+    transactions = [t1]
+
+    assert not is_transaction_allowed(transactions, t2)

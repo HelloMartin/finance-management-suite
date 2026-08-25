@@ -10,3 +10,15 @@ def calculate_balance(account_id: UUID, transactions: list[Transaction]) -> Deci
         start=Decimal("0.00"),
     )
     return total_amount
+
+
+def is_transaction_allowed(
+    transactions: list[Transaction], new_transaction: Transaction
+) -> bool:
+    if new_transaction.amount >= 0:
+        return True
+
+    return (
+        calculate_balance(new_transaction.account_id, transactions)
+        + new_transaction.amount
+    ) >= 0
